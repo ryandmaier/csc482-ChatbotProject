@@ -1,11 +1,13 @@
 
 import sys
 import random
+import time
 
 class ChatBot:
     
     def __init__(self, irc):
         self.irc = irc
+        self.creation_time = time.time()
         
     def get_message_text(self, msg):
         print("Full msg:",msg)
@@ -16,10 +18,13 @@ class ChatBot:
             return {'text': split[1].strip().lower(), 'sender': sender}
         # returns None if split doesn't work (not PRIVMSG, or different channel, or bot name not at message start)
         
-    def hello(self, stm):
-        # if stm.state == 'END'
+    def hello(self, stm):        
         resps = ["Hello World!", "hello there", "what's up", "hey buddy", "hey", "hii :)"]
         self.irc.send(random.choice(resps))
+        if stm.state == 'END':
+            stm.state = 'OUTREACH_REPLY_2'
+            stm.speaker = 2
+            stm.transition()
         
     def _get_users(self):
         self.irc.command(f"NAMES {self.irc.channel}")
@@ -43,6 +48,7 @@ class ChatBot:
         return
     
     def initiate_greeting(self, stm):
+        # TODO: find a good way to put this functionality in stm's START() maybe...
         user = random.choice(self._get_users().split(' '))
         greeting = random.choice(['hello', 'hi', 'hey'])
         self.irc.send(f"{user}: {greeting}")
@@ -58,7 +64,11 @@ class ChatBot:
         message = self.irc.get_response()
         info = self.get_message_text(message)
         if info is None:
+            # outreach after 15 seconds
+            if time.time() - self.creation_time > 15:
+                self.initiate_greeting(stm)
             return
+        
         text = info['text']
         print(f"sender: {info['sender']}")
         
