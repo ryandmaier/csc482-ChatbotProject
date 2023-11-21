@@ -21,10 +21,6 @@ class ChatBot:
     def hello(self, stm):        
         resps = ["Hello World!", "hello there", "what's up", "hey buddy", "hey", "hii :)"]
         self.irc.send(random.choice(resps))
-        if stm.state == 'END':
-            stm.state = 'OUTREACH_REPLY_2'
-            stm.speaker = 2
-            stm.transition()
         
     def _get_users(self):
         self.irc.command(f"NAMES {self.irc.channel}")
@@ -47,26 +43,17 @@ class ChatBot:
         # TODO: Chatbot must forget all it knows...
         return
     
-    def initiate_greeting(self, stm):
-        # TODO: find a good way to put this functionality in stm's START() maybe...
-        user = random.choice(self._get_users().split(' '))
-        greeting = random.choice(['hello', 'hi', 'hey'])
-        self.irc.send(f"{user}: {greeting}")
-        stm.state = 'START'
-        stm.speaker = 1
-        stm.transition()
-    
     #########################
     # Main response handler #
     #########################
 
     def recieve_message(self, stm):
+        if time.time() - self.creation_time > 10 and stm.state == 'END':
+            stm.START()
+        
         message = self.irc.get_response()
         info = self.get_message_text(message)
         if info is None:
-            # outreach after 15 seconds
-            if time.time() - self.creation_time > 15:
-                self.initiate_greeting(stm)
             return
         
         text = info['text']
@@ -75,7 +62,7 @@ class ChatBot:
         print("Chatbot recieved message:",text)
         
         if ("hello" in text) or ("hi" in text) or ("hey" in text):
-            return self.hello(stm)
+            stm.OUTREACH_REPLY_2(sender=info['sender'])
 
         if "die" in text:
             self.irc.send("you may take my life but you'll never take my freedom")

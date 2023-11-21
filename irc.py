@@ -63,7 +63,7 @@ botpass = ""			# in case you have a registered bot
 irc = IRC(channel=channel, botnick=botnick)
 irc.connect(server, port, botpass, botnickpass)
 
-stm = StateMachine(irc=irc)
 my_bot = ChatBot(irc=irc)
+stm = StateMachine(irc=irc, chatbot=my_bot)
 while True:
     my_bot.recieve_message(stm)

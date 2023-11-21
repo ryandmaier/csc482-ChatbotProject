@@ -1,11 +1,14 @@
-
+import sys
 import time
+import random
 
 class StateMachine:
     
-    def __init__(self, irc):
+    def __init__(self, irc, chatbot):
         self.irc = irc
+        self.chatbot = chatbot
         self.speaker = None
+        self.partner = None
         self.state = 'END'
         self.transitions = {
             'START': 'INITIAL_OUTREACH_1',
@@ -27,70 +30,112 @@ class StateMachine:
             'INQUIRY_2': 'GIVEUP_FRUSTRATED'
         }
         
-        return
     
     def transition(self, transition_dict, state=None):
         self.state = transition_dict[self.state]
         if state:
             self.state = state
+        print(f'transitioning to {self.state}')
         exec(f"self.{self.state}()")
         return
     
     def await_response(self):
         t1 = time.time()
         # TODO: busy wait? resume and let state handle it?
-        while time.time() - t1 < 25:
+        print('waiting for response...')
+        while time.time() - t1 < 10:
             response = self.irc.get_response()
-            # info = chatbot.get_message_text(response)
-            # if info is not none:
-                # self.transition(self.transitions)
+            info = self.chatbot.get_message_text(response)
+            if info is not None and info['sender'] == self.partner:
+                self.transition(self.transitions)
+                return
         
         # time expired
-        # TODO: maybe create another transition dict for transitions that occur after timeout
+        print("did not get a response.")
         self.transition(self.timeouts)
+    
+    def send_message(self, choices):
+        message = random.choice(choices)
+        self.irc.send(f"{self.partner}: {message}")
     
     # STATE FUNCTIONS #
     
     def START(self):
         print("In the start state!")
-        # self.transition()
-        return
+        self.speaker = 1
+        self.state = 'START'
+        self.transition()
     
     def INITIAL_OUTREACH_1(self):
+        print('in initial outreach')
         if self.speaker == 1:
-            # (If we move initiate_greeting() functionality to stm):
-            # get list of users
-            # randomly choose users
-            # send greeting: random.choice(['hello', 'hi', 'hey'])
-            pass
+            # user = random.choice(self.chatbot._get_users().split(' '))
+            user = 'tester7'
+            self.partner = user
+            self.send_message(['hello', 'hi', 'hey'])
             
         # if speaker 2, just wait for response
-        self.await_response()
-        
+        self.await_response()      
     
     def SECONDARY_OUTREACH_1(self):
-        pass
-    
-    def OUTREACH_REPLY_2(self):
-        pass
-    
+        print('in secondary outreach')
+        if self.speaker == 1:
+            self.send_message(['I said hi!', 'excuse me, hello?', 'are you there?'])
+        
+        self.await_response()
+               
+    def OUTREACH_REPLY_2(self, sender=None):
+        print('in outreach reply')
+        if self.speaker is None: # where stm begins as speaker 2
+            self.state = 'OUTREACH_REPLY_2'
+            self.speaker == 2
+            self.partner = sender
+            self.send_message(["Hi back!", "hello there", "hey buddy", "hey", "hii :)"])
+        
+        self.await_response()
+        
+        
     def INQUIRY_1(self):
-        pass
+        print('in inquiry 1')
+        if self.speaker == 1:
+            self.send_message(['how are you?', "what's happening", "what's up?"])
+        
+        self.await_response()
+        
+    # Doesn't have a timeout according to the diagram
+    def INQUIRY_REPLY_2(self):
+        print('in inquiry reply 2')
+        if self.speaker == 2:
+            self.send_message(["I'm doing well", "I'm good", "I'm fine"])
+        else:
+            self.await_response()
+    
+    
+    def INQUIRY_2(self):
+        print("in inquiry 2")
+        if self.speaker == 2:
+            self.send_message(["how about you?", "and yourself?", "and how are you doing?"])
+            
+        self.await_response()
     
     # Doesn't have a timeout according to the diagram
     def INQUIRY_REPLY_1(self):
-        pass
+        print("in inquiry reply 1")
+        if self.speaker == 1:
+            self.send_message(["I'm good", "I'm fine, thanks for asking", "doing well."])
+        
+        self.transition(self.transitions)        
     
-    def INQUIRY_2(self):
-        pass
+    def GIVEUP_FRUSTRATED(self):
+        self.send_message(['Ok, forget you.', 'Whatever.', 'I give up!'])
+        self.transition(self.transitions)
     
-    # Doesn't have a timeout according to the diagram
-    def INQUIRY_REPLY_2(self):
-        pass
-    
-    def GIVEUP_FUSTRATED(self):
-        pass
-    
+    def END(self):
+        print("in end")
+        self.speaker = None
+        self.partner = None
+        self.state = 'END'
+            
     
     
     
