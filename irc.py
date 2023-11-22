@@ -57,13 +57,15 @@ channel = "#CSC482"
 if len(sys.argv) > 1:
     channel = f"#{sys.argv[1]}" # "#maierChatBot" # 
 botnick = "maier-bot"
+if len(sys.argv) > 2:
+    botnick = sys.argv[2] # "#maier-bot" # 
 botnickpass = ""		# in case you have a registered nickname
 botpass = ""			# in case you have a registered bot	
 
 irc = IRC(channel=channel, botnick=botnick)
 irc.connect(server, port, botpass, botnickpass)
 
-stm = StateMachine(irc=irc)
 my_bot = ChatBot(irc=irc)
+stm = StateMachine(irc=irc, chatbot=my_bot)
 while True:
     my_bot.recieve_message(stm)
