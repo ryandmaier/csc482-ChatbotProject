@@ -68,4 +68,7 @@ irc.connect(server, port, botpass, botnickpass)
 my_bot = ChatBot(irc=irc)
 stm = StateMachine(irc=irc, chatbot=my_bot)
 while True:
+    if time.time() - stm.start_convo_waiter > 5 and stm.state == 'END':
+            print("Initiating Greeting!")
+            stm.START()
     my_bot.recieve_message(stm)

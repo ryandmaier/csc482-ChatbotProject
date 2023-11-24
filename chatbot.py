@@ -7,8 +7,7 @@ class ChatBot:
     
     def __init__(self, irc):
         self.irc = irc
-        self.start_convo_waiter = time.time()
-        
+                
     def get_message_text(self, msg):
         print("Full msg:",msg)
         # Split to isolate message itself from the full text
@@ -18,9 +17,9 @@ class ChatBot:
             return {'text': split[1].strip().lower(), 'sender': sender}
         # returns None if split doesn't work (not PRIVMSG, or different channel, or bot name not at message start)
         
-    def hello(self, stm):        
-        resps = ["Hello World!", "hello there", "what's up", "hey buddy", "hey", "hii :)"]
-        self.irc.send(random.choice(resps))
+    # def hello(self, stm):        
+    #     resps = ["Hello World!", "hello there", "what's up", "hey buddy", "hey", "hii :)"]
+    #     self.irc.send(random.choice(resps))
         
     def _get_users(self):
         split = []
@@ -56,33 +55,35 @@ class ChatBot:
     #########################
 
     def recieve_message(self, stm):
-        if time.time() - self.start_convo_waiter > 5 and stm.state == 'END':
-            print("Initiating Greeting!")
-            stm.START()
-        
         message = self.irc.get_response()
         info = self.get_message_text(message)
         if info is None:
-            return
+            return None
         
         text = info['text']
         print(f"sender: {info['sender']}")
         
         print("Chatbot recieved message:",text)
         
-        if ("hello" in text) or ("hi" in text) or ("hey" in text):
+        if ("hello" in text) or ("hi" in text) or ("hey" in text) and stm.state == 'END':
             stm.OUTREACH_REPLY_2(sender=info['sender'])
 
-        if "die" in text:
+        elif "die" in text:
             self.irc.send("you may take my life but you'll never take my freedom")
             self.irc.command("QUIT")
             sys.exit()
             
-        if "users" in text:
+        elif "users" in text:
             self.users()
+            return None
             
-        if ("usage" in text) or ("who are you?" in text):
+        elif ("usage" in text) or ("who are you?" in text):
             self.usage(info['sender'])
+            return None
             
-        if "forget" in text:
+        elif "forget" in text:
             self.forget()
+            return None
+        
+        else:
+            return info

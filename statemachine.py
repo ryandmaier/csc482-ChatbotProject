@@ -1,15 +1,17 @@
 
 import time
 import random
+from chatbot import ChatBot
 
 class StateMachine:
     
     def __init__(self, irc, chatbot):
         self.irc = irc
-        self.chatbot = chatbot
+        self.chatbot : ChatBot = chatbot
         self.speaker = None
         self.partner = None
         self.state = 'END'
+        self.start_convo_waiter = time.time()
         self.transitions = {
             'START': 'INITIAL_OUTREACH_1',
             'INITIAL_OUTREACH_1': 'OUTREACH_REPLY_2',
@@ -26,8 +28,10 @@ class StateMachine:
             'INITIAL_OUTREACH_1': 'SECONDARY_OUTREACH_1',
             'SECONDARY_OUTREACH_1': 'GIVEUP_FRUSTRATED',
             'OUTREACH_REPLY_2': 'GIVEUP_FRUSTRATED',
-            'INQUIRY_1': 'GIVEUP_FRUSTRATED',
-            'INQUIRY_2': 'GIVEUP_FRUSTRATED'
+            'INQUIRY_1': 'END', # If there never is an inquiry, end convo
+            'INQUIRY_REPLY_2': 'GIVEUP_FRUSTRATED',
+            'INQUIRY_2': 'END', # If there never is an inquiry, end convo
+            'INQUIRY_REPLY_1': 'GIVEUP_FRUSTRATED'
         }
         
     
@@ -43,8 +47,7 @@ class StateMachine:
         t1 = time.time()
         print(f'waiting for response from {self.partner}...')
         while time.time() - t1 < 10:
-            response = self.irc.get_response()
-            info = self.chatbot.get_message_text(response)
+            info = self.chatbot.recieve_message(self)
             if info is not None and info['sender'] == self.partner:
                 self.transition(self.transitions)
                 return
@@ -79,6 +82,7 @@ class StateMachine:
             while user == self.chatbot.irc.botnick:
                 user = random.choice(users)
             self.partner = user
+            # self.partner = 'tester7'
             print(f"Chosen user: {self.partner}")
             self.send_message(['hello', 'hi', 'hey'])
             self.transition(self.transitions)
@@ -149,7 +153,7 @@ class StateMachine:
         print("in end")
         self.speaker = None
         self.partner = None
-        self.chatbot.start_convo_waiter = time.time()
+        self.start_convo_waiter = time.time()
         self.state = 'END'
 
             
