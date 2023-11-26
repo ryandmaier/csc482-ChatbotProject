@@ -8,18 +8,18 @@ class ChatBot:
     def __init__(self, irc):
         self.irc = irc
                 
-    def get_message_text(self, msg):
-        print("Full msg:",msg)
-        # Split to isolate message itself from the full text
-        split = msg.split(f"PRIVMSG {self.irc.channel} :{self.irc.botnick}:")
-        sender = msg.split("!")[0][1:].replace('@','')
-        if len(split) > 1:
-            return {'text': split[1].strip().lower(), 'sender': sender}
+    def get_message_text(self, message):
+        print("Full msg:",message)
+        # Split by newline incase multiple messages come through as one
+        # return first message that matches f"PRIVMSG {self.irc.channel} :{self.irc.botnick}:"
+        messages = message.split('\n')
+        for msg in messages:
+            # Split to isolate message itself from the full text
+            split = msg.split(f"PRIVMSG {self.irc.channel} :{self.irc.botnick}:")
+            sender = msg.split("!")[0][1:].replace('@','')
+            if len(split) > 1:
+                return {'text': split[1].strip().lower(), 'sender': sender}
         # returns None if split doesn't work (not PRIVMSG, or different channel, or bot name not at message start)
-        
-    # def hello(self, stm):        
-    #     resps = ["Hello World!", "hello there", "what's up", "hey buddy", "hey", "hii :)"]
-    #     self.irc.send(random.choice(resps))
         
     def _get_users(self):
         split = []
@@ -47,8 +47,8 @@ class ChatBot:
         return
     
     def forget(self):
-        # TODO: Chatbot must forget all it knows...
-        return
+        self.irc.send("Forgetting everything...")
+        return "forget"
     
     #########################
     # Main response handler #
@@ -65,7 +65,7 @@ class ChatBot:
         
         print("Chatbot recieved message:",text)
         
-        if ("hello" in text) or ("hi" in text) or ("hey" in text) and stm.state == 'END':
+        if (("hello" in text) or ("hi" in text) or ("hey" in text)) and stm.state == 'END':
             stm.OUTREACH_REPLY_2(sender=info['sender'])
 
         elif "die" in text:
@@ -81,9 +81,9 @@ class ChatBot:
             self.usage(info['sender'])
             return None
             
-        elif "forget" in text:
-            self.forget()
-            return None
+        elif text == "forget":
+            # return message so stm knows to transition to END and return
+            return self.forget()
         
         else:
             return info

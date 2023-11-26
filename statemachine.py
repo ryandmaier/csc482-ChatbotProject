@@ -33,7 +33,6 @@ class StateMachine:
             'INQUIRY_2': 'END', # If there never is an inquiry, end convo
             'INQUIRY_REPLY_1': 'GIVEUP_FRUSTRATED'
         }
-        
     
     def transition(self, transition_dict, state=None):
         self.state = transition_dict[self.state]
@@ -48,9 +47,10 @@ class StateMachine:
         print(f'waiting for response from {self.partner}...')
         while time.time() - t1 < 10:
             info = self.chatbot.recieve_message(self)
+            if info == "forget":
+                return self.transition(self.transitions, state="END")
             if info is not None and info['sender'] == self.partner:
-                self.transition(self.transitions)
-                return
+                return self.transition(self.transitions)
         
         # time expired
         print("did not get a response.")
@@ -82,7 +82,6 @@ class StateMachine:
             while user == self.chatbot.irc.botnick:
                 user = random.choice(users)
             self.partner = user
-            # self.partner = 'tester7'
             print(f"Chosen user: {self.partner}")
             self.send_message(['hello', 'hi', 'hey'])
             self.transition(self.transitions)
@@ -122,7 +121,6 @@ class StateMachine:
         if self.speaker == 2:
             self.send_message(["I'm doing well", "I'm good", "I'm fine"])
             self.transition(self.transitions)
-        # TODO: Do we wait for a response here? If we do it times out, if we don't it doesn't wait for INQUIRY_2
         else:
             self.await_response()
     
