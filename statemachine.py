@@ -81,19 +81,19 @@ class StateMachine:
             user = self.chatbot.irc.botnick
             while user == self.chatbot.irc.botnick:
                 user = random.choice(users)
-            self.partner = user
+            # self.partner = user
+            self.partner = 'tester7'
             print(f"Chosen user: {self.partner}")
             self.send_message(['hello', 'hi', 'hey'])
-            self.transition(self.transitions)
-        else: # if speaker 2, just wait for response
-            self.await_response()      
+            
+        # if speaker 2, just wait for response
+        self.await_response()      
     
     def SECONDARY_OUTREACH_1(self):
         print('in secondary outreach, speaker',self.speaker)
         if self.speaker == 1:
             self.send_message(['I said hi!', 'excuse me, hello?', 'are you there?'])
-        else:
-            self.await_response()
+        self.await_response()
                
     def OUTREACH_REPLY_2(self, sender=None):
         print('in outreach reply, speaker',self.speaker)
