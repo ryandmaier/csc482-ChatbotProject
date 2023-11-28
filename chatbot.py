@@ -1,6 +1,5 @@
 # Ryan Maier and Bret Craig
 import sys
-import re
 from book import recommend_book
 
 import numpy as np
