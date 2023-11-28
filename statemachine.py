@@ -1,4 +1,4 @@
-
+# Ryan Maier and Bret Craig
 import time
 import random
 from chatbot import ChatBot
@@ -81,12 +81,10 @@ class StateMachine:
             user = self.chatbot.irc.botnick
             while user == self.chatbot.irc.botnick:
                 user = random.choice(users)
-            # self.partner = user
             self.partner = 'tester7'
             print(f"Chosen user: {self.partner}")
             self.send_message(['hello', 'hi', 'hey'])
             
-        # if speaker 2, just wait for response
         self.await_response()      
     
     def SECONDARY_OUTREACH_1(self):
@@ -102,9 +100,8 @@ class StateMachine:
             self.speaker = 2
             self.partner = sender
             self.send_message(["Hi back!", "hello there", "hey buddy", "hey", "hii :)"])
-            self.transition(self.transitions)
-        else:
-            self.await_response()
+            
+        self.transition(self.transitions)
         
         
     def INQUIRY_1(self):
@@ -115,7 +112,6 @@ class StateMachine:
         else:
             self.await_response()
         
-    # Doesn't have a timeout according to the diagram
     def INQUIRY_REPLY_2(self):
         print('in inquiry reply 2, speaker',self.speaker)
         if self.speaker == 2:
@@ -133,7 +129,6 @@ class StateMachine:
         else:
             self.await_response()
     
-    # Doesn't have a timeout according to the diagram
     def INQUIRY_REPLY_1(self):
         print('in inquiry reply 1, speaker',self.speaker)
         if self.speaker == 1:
