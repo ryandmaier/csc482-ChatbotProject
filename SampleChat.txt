@@ -1,0 +1,32 @@
+Example 1 - bot greets tester:
+[8:31:55 PM] <maier-bot> tester7: hi
+[8:32:00 PM] <tester7> maier-bot: hello
+[8:32:01 PM] <maier-bot> tester7: what's up?
+[8:32:07 PM] <tester7> maier-bot: not much
+[8:32:13 PM] <tester7> maier-bot: how about you?
+[8:32:14 PM] <maier-bot> tester7: I'm good
+
+Example 2 - tester greets bot: 
+[8:34:25 PM] <tester7> maier-bot: hi
+[8:34:26 PM] <maier-bot> tester7: hey buddy
+[8:34:31 PM] <tester7> maier-bot: how are you?
+[8:34:32 PM] <maier-bot> tester7: I'm fine
+[8:34:33 PM] <maier-bot> tester7: and yourself?
+[8:34:38 PM] <tester7> maier-bot: doing good
+
+Example 3 - greeting timeout:
+[8:35:58 PM] <maier-bot> tester7: hello
+[8:36:10 PM] <maier-bot> tester7: excuse me, hello?
+[8:36:23 PM] <maier-bot> tester7: Ok, forget you.
+
+Example 4 - birthday lookup:
+[8:37:36 PM] <tester7> maier-bot: when was barack obama born?
+[8:37:39 PM] <maier-bot> tester7: According to Wikipedia, Barack Obama was born August 4, 1961.
+
+Example 5 - recommend book by genre:
+[8:38:40 PM] <tester7> maier-bot: recommend a fiction book
+[8:38:42 PM] <maier-bot> tester7: The Odyssey of Homer by Homer
+
+Example 6 - recommend book by author:
+[8:39:15 PM] <tester7> maier-bot: recommend a book by Stephen King
+[8:39:17 PM] <maier-bot> tester7: The Stand by Stephen King
