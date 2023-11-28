@@ -82,6 +82,7 @@ class StateMachine:
             while user == self.chatbot.irc.botnick:
                 user = random.choice(users)
             self.partner = user
+
             print(f"Chosen user: {self.partner}")
             self.send_message(['hello', 'hi', 'hey'])
             
