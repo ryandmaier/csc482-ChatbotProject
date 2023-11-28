@@ -3,6 +3,46 @@ import sys
 import random
 import time
 
+import numpy as np
+import requests
+import re
+
+def get_bday(name, search=True):
+    bday_descs = ["born","date of birth","bday"]
+    main_page_id = r"class=\"infobox.*?vcard\""
+    search_page_id = '<div id="mw-content-text" class="mw-body-content">'
+
+    name = name.replace('_',' ')
+    url = f"https://en.wikipedia.org/w/index.php?search={'_'.join(name.split(' '))}"
+    print('url: ',url)
+    text = requests.get(url).text.lower()
+
+    if re.search(main_page_id, text):
+        if np.array([desc in text for desc in bday_descs]).any():
+            regex = f"<th.*?>.*?(?:{'|'.join(bday_descs)}).*?</th>"
+            td = re.split(regex, text)[1].split('/td')[0]
+            innerhtml = re.sub(r"<.*?>|\[.*?\]|\&\#\d+\;", " ", td)
+            bdays = re.findall(r"\w+\s\d+,\s\d+|\d+\s\w+.*?\d{4}", innerhtml)
+            if len(bdays) > 0:
+                return re.sub(r"\s+", " ",f"According to Wikipedia, {name.title()} was born {bdays[0].title()}.")
+    if (search_page_id in text) and (search == True):
+        content = text.split(search_page_id)[1]
+        if "mw-search-results-container" in content:
+            content = ''.join(content.split("mw-search-results-container")[1:])
+        elif 'id="people"' in content:
+            content = ''.join(content.split('id="people"')[1:])
+        pages = [ s.split('\"')[0] for s in content.split("\"/wiki/")[1:] ]
+        return get_bday(pages[0], search=False)
+    
+    return f"No birthdate found for {name.replace('_',' ').title()}"
+    
+def bday_question(q):
+    q = q.lower()
+    regex = r"when was .*? born\?"
+    if re.match(regex, q):
+        name = q.split("when was ")[1].split(" born?")[0]
+        return get_bday(name)
+
 class ChatBot:
     
     def __init__(self, irc):
@@ -44,6 +84,8 @@ class ChatBot:
         print(line1)
         self.irc.send(line1)
         # TODO: line 2 explain what special abilities the bot has...
+        line2 = f"""{sender}: I can tell you someone's birthday by looking them up on Wikipedia. Just ask "When was [NAME] born?" """
+        self.irc.send(line2)
         return
     
     def forget(self):
@@ -84,6 +126,10 @@ class ChatBot:
         elif text == "forget":
             # return message so stm knows to transition to END and return
             return self.forget()
+        
+        elif re.match(r"when was .*? born\?", text):
+            self.irc.send(f"{info['sender']}: {bday_question(text)}")
+            return None
         
         else:
             return info
