@@ -1,7 +1,7 @@
-
+# Ryan Maier and Bret Craig
 import sys
-import random
-import time
+import re
+from book import recommend_book
 
 import numpy as np
 import requests
@@ -83,9 +83,14 @@ class ChatBot:
         line1 = f"{sender}: I am bot {self.irc.botnick}, created by Ryan Maier and Bret Craig for CSC 482-03."
         print(line1)
         self.irc.send(line1)
-        # TODO: line 2 explain what special abilities the bot has...
         line2 = f"""{sender}: I can tell you someone's birthday by looking them up on Wikipedia. Just ask "When was [NAME] born?" """
+        line3 = f"{sender}: I can also recommend books based on author or genre. Try these commands:"
+        line4 = f"{sender}: > recommend a [GENRE] book"
+        line5 = f"{sender}: > recommend a book by [AUTHOR]"
         self.irc.send(line2)
+        self.irc.send(line3)
+        self.irc.send(line4)
+        self.irc.send(line5)
         return
     
     def forget(self):
@@ -103,11 +108,32 @@ class ChatBot:
             return None
         
         text = info['text']
-        print(f"sender: {info['sender']}")
+        sender = info['sender']
+        print(f"sender: {sender}")
         
         print("Chatbot recieved message:",text)
         
-        if (("hello" in text) or ("hi" in text) or ("hey" in text)) and stm.state == 'END':
+        
+        ### BRET'S FEATURE ###
+        
+        genre_pattern = r"recommend a (.+) book"
+        author_pattern = r"recommend a book by (.+)"
+        genre_match = re.match(genre_pattern, text, re.IGNORECASE)
+        author_match = re.match(author_pattern, text, re.IGNORECASE)
+
+        if genre_match and stm.state == 'END':
+            genre = genre_match.group(1)
+            query = f"subject:{genre}"
+            self.irc.send(f'{sender}: {recommend_book(query)}')
+            
+        elif author_match and stm.state == 'END':
+            author = author_match.group(1)
+            query = f'inauthor:"{author}"'
+            self.irc.send(f'{sender}: {recommend_book(query)}')
+            
+        #######################
+        
+        elif (("hello" in text) or ("hi" in text) or ("hey" in text)) and stm.state == 'END':
             stm.OUTREACH_REPLY_2(sender=info['sender'])
 
         elif "die" in text:
@@ -120,7 +146,7 @@ class ChatBot:
             return None
             
         elif ("usage" in text) or ("who are you?" in text):
-            self.usage(info['sender'])
+            self.usage(sender)
             return None
             
         elif text == "forget":
